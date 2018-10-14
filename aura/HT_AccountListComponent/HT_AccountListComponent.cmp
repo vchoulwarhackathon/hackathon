@@ -1,0 +1,376 @@
+<aura:component controller="HT_AccountListApexController" implements="flexipage:availableForRecordHome,force:hasRecordId,force:appHostable">
+	<aura:attribute name="accountList" type="object" />
+    <aura:attribute name="AccoundId" type="String"/>
+    <aura:attribute name="isShow" type="boolean" default="false"/>
+    <aura:attribute name="fieldList" type="List" />
+    <aura:attribute name="loaded" type="Boolean" default="true"/>
+    <aura:attribute name="WrapperRec" type="HT_AccountListApexController.AccountWrapper"/>
+    <aura:attribute name="showNewAccountModal" type="Boolean" default="false"/>
+    <aura:attribute name="showEdit" type="Boolean" default="false"/>
+    <aura:attribute name="isSelectAll" type="boolean" default="false"/>
+    <aura:attribute name="selectedAccounts" type="List"/>
+    <aura:attribute name="selectedSource" type="String"/>
+    <aura:attribute name="showDeleteModal" type="Boolean" default="false"/>
+    <!--aura:attribute name="options" type="List"/-->
+    
+    <!--aura:attribute name="dummyAccount" type="Account"/-->
+    <aura:attribute name="showUpdateSourceModal" type="Boolean" default="false"/>
+    <aura:attribute name="dummyAccount" type="Account" 
+           default="{ 'sobjectType': 'Account' }"/>
+    
+        <aura:handler name="init" value="{!this}" action="{!c.doInit}" />
+        <!-- Use a data table from the Lightning Design System: https://www.lightningdesignsystem.com/components/data-tables/ -->
+        <div class="slds-grid slds-grid_vertical test">
+            <div class="slds-col half">
+                <div class="slds-grid slds-wrap" style="margin: 5px -10px 10px 6px;">
+                	<span class="slds-size_2-of-12 slds-max-small-size_1-of-1" style="width: 10%;margin-right: 93px;">
+                        <lightning:button class="slds-size_full slds-float--right" variant="brand" name="New" label="New" onclick="{!c.createNew}"/>
+                    </span>
+                    <span class="slds-size_2-of-12 slds-max-small-size_1-of-1" style="width: 14%;margin-left: -81px;">
+                        <lightning:button class="slds-size_full slds-float--right" variant="brand" name="New" label="Update Account Source" onclick="{!c.showUpdateSourceModal}"/>
+                    </span>
+                    <span class="slds-size_2-of-12 slds-max-small-size_1-of-1" style="width: 10%;margin-left: 10px;">
+                        <lightning:button class="slds-size_full slds-float--right" variant="brand" name="New" label="Delete" onclick="{!c.deleteAllConfirm}"/>
+                    </span>
+                </div>
+                <br/>
+				<table class="slds-table slds-table_bordered slds-table_striped slds-table_cell-buffer slds-table_fixed-layout">
+                	<thead>
+                    	<tr class="slds-text-heading_label">
+                            <th scope="col">
+                                <label class="slds-checkbox">
+                                    <ui:inputCheckbox value="{!v.isSelectAll}" change="{!c.handleSelectedAllAccounts}" aura:id="selectAll"/>
+                                    <span class="slds-checkbox--faux" />
+                                    <span class="slds-form-element__label"></span>
+                                </label>
+                            </th>
+                            <th scope="col"><div class="slds-truncate" title="ID">Action</div></th>
+                            <th scope="col"><div class="slds-truncate" title="Name">Name</div></th>
+                            <th scope="col"><div class="slds-truncate" title="Account Number">Account Number</div></th>
+                            <th scope="col"><div class="slds-truncate" title="Account Owner">Account Owner</div></th>
+                            <th scope="col"><div class="slds-truncate" title="Account Source">Account Source</div></th>
+                            <th scope="col"><div class="slds-truncate" title="Revenue">Revenue</div></th> 
+                            <th scope="col"><div class="slds-truncate" title="Type">Type</div></th>
+                            
+                            <th scope="col"><div class="slds-truncate" title="Industry">Industry</div></th>
+                            <th scope="col"><div class="slds-truncate" title="CreatedBy">CreatedBy</div></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Use the Apex model and controller to fetch server side data -->
+                        <aura:iteration items="{!v.accountList}" var="account">
+                            <tr>
+                                <th>
+                                    <label class="slds-checkbox">
+                                        <ui:inputCheckbox aura:id="checkAccount" value="" text="{!account.accountId}" change="{!c.handleSelectedAccounts}" />
+                                        <span class="slds-checkbox--faux" />
+                                        <span class="slds-form-element__label"></span>
+                                    </label>
+                                </th>
+                                <th scope="row">
+                                    <div class="slds-truncate" title="{!account.accountId}">
+                                        <a data-name="{!account.accountId}" onclick="{!c.onEdit}">
+                                            Edit
+                                        </a>
+                                    	<a data-name="{!account.accountId}" onclick="{!c.onDelete}">
+                                            Delete
+                                        </a>
+                                    </div>
+                                </th>
+                                <td>
+                                    <div class="slds-truncate" title="{!account.name}">
+                                        <a data-name="{!account.accountId}" onclick="{!c.showDetails}">
+                                            {!account.name}
+                                        </a>
+                                    </div>
+                                </td>
+                                <td><div class="slds-truncate" title="{!account.AccountNumber}">{!account.AccountNumber}</div></td>
+                                <td><div class="slds-truncate" title="{!account.OwnerName}">{!account.OwnerName}</div></td>
+                                <td><div class="slds-truncate" title="{!account.AccountSource}">{!account.AccountSource}</div></td>
+                                <td><div class="slds-truncate" title="{!account.AnnualRevenue}">{!account.AnnualRevenue}</div></td>
+                                <td><div class="slds-truncate" title="{!account.Type}">{!account.Type}</div></td>
+                                
+                                <td><div class="slds-truncate" title="{!account.Industry}">{!account.Industry}</div></td>
+                                <td><div class="slds-truncate" title="{!account.CreatedByName}">{!account.CreatedByName}</div></td>
+                  
+                            </tr>
+                        </aura:iteration>
+                    </tbody>
+				</table>
+			</div>
+        	<div class="slds-col">
+                <aura:if isTrue="{! v.loaded }">
+                    <aura:set attribute="else">
+                        <div class="exampleHolder">
+                            <lightning:spinner alternativeText="Loading" />
+                        </div>
+                    </aura:set>
+                </aura:if>
+            	<span></span>
+                <div class="demo-only" style="padding: 0.5rem; background: rgb(22, 50, 92);">
+                  <div class="slds-text-color_inverse">Account Details</div>
+                </div>
+                <aura:if isTrue="{!v.isShow}">
+                    <lightning:recordViewForm recordId="{!v.AccoundId}" objectApiName="Account">
+                        <lightning:layout multipleRows="true">
+                            <aura:iteration items="{!v.fieldList}" var="fieldRec" indexVar="rowIndex">
+                                <lightning:layoutItem padding="around-large" size="6" smallDeviceSize="12" mediumDeviceSize="3">
+                                    <lightning:outputField fieldName="{!fieldRec}" />
+                                </lightning:layoutItem>
+                            </aura:iteration>
+                        </lightning:layout  >
+                    </lightning:recordViewForm>
+                </aura:if>
+            </div>
+            
+	<!-- New popup code starts -->
+			<div class="slds-m-around_xx-large">
+        
+                <!--Use aura:if tag to display Model Box, on the bese of conditions. [isOpen boolean attribute] -->   
+                <aura:if isTrue="{!v.showNewAccountModal}">
+                    
+                     
+                    <section role="dialog" tabindex="-1" aria-labelledby="modal-heading-01" aria-modal="true" aria-describedby="modal-content-id-1" class="slds-modal slds-fade-in-open">
+                        <div class="slds-modal__container">
+                            
+                            <header class="slds-modal__header">
+                                <lightning:buttonIcon iconName="utility:close"
+                                                      onclick="{! c.closeModal }"
+                                                      alternativeText="close"
+                                                      variant="bare-inverse"
+                                                      class="slds-modal__close"/>
+                                <h2 id="modal-heading-01" class="slds-text-heading_medium slds-hyphenate">New Account</h2>
+                                
+                            </header>
+                            
+                            <div class="slds-modal__content slds-p-around_medium" style="padding-top: 0px;" id="modal-content-id-1">
+                            
+                                <div class="slds-p-top_large" Style=""> 
+                                    
+                                    <lightning:layout multipleRows="true" >
+                                        <lightning:layoutitem padding="around-small" flexibility="auto" size="6">
+                                            <lightning:input  label="Name"  value="{!v.WrapperRec.name}"/>
+                                        </lightning:layoutitem>
+                                        <lightning:layoutitem padding="around-small" flexibility="auto" size="6">
+                                            <lightning:input  label="AccountNumber" value="{!v.WrapperRec.AccountNumber}" />
+                                        </lightning:layoutitem>
+                                        <lightning:layoutitem padding="around-small" flexibility="auto" size="6">
+                                            <lightning:input  label="AccountSource"   value="{!v.WrapperRec.AccountSource}"/>
+                                        </lightning:layoutitem>
+                                        <lightning:layoutitem padding="around-small" flexibility="auto" size="6">
+                                            <lightning:input  label="Type"   value="{!v.WrapperRec.Type}"/>
+                                        </lightning:layoutitem>
+                                        <!--lightning:layoutitem padding="around-small" flexibility="auto" size="6">
+                                            <lightning:input  label="Parent"   value="{!v.WrapperRec.Parent}"/>
+                                        </lightning:layoutitem-->
+                                        <lightning:layoutitem padding="around-small" flexibility="auto" size="6">
+                                            <lightning:input  label="AnnualRevenue"   value="{!v.WrapperRec.AnnualRevenue}"/>
+                                        </lightning:layoutitem>
+                                        <lightning:layoutitem padding="around-small" flexibility="auto" size="6">
+                                            <lightning:input  label="Industry"   value="{!v.WrapperRec.Industry}"/>
+                                        </lightning:layoutitem>
+                                        <lightning:layoutitem padding="around-small" flexibility="auto" size="6">
+                                            <lightning:input  label="Description"   value="{!v.WrapperRec.Description}"/>
+                                        </lightning:layoutitem>
+                                        <lightning:layoutitem padding="around-small" flexibility="auto" size="6">
+                                            <lightning:input  label="Phone"   value="{!v.WrapperRec.Phone}"/>
+                                        </lightning:layoutitem>
+                                        <lightning:layoutitem padding="around-small" flexibility="auto" size="6">
+                                            <lightning:input  label="Fax"   value="{!v.WrapperRec.Fax}"/>
+                                        </lightning:layoutitem>
+                                    </lightning:layout>
+                                    
+                                    <lightning:layout horizontalAlign="left">
+                                        <lightning:layoutitem padding="around-small">
+                                            <lightning:button  label="Save" variant="brand" onclick="{!c.SaveAccount}"/>
+                                        </lightning:layoutitem>
+                                    </lightning:layout>
+                                </div>
+                             </div>   
+                            
+                          
+                        </div>
+                    </section>
+                    <div class="slds-backdrop slds-backdrop_open"></div>
+                    
+                    
+                </aura:if>
+            </div>
+    <!-- New popup code ends -->
+            
+                 
+	<!-- Edit popup code starts -->
+			<div class="slds-m-around_xx-large">
+        
+                <!--Use aura:if tag to display Model Box, on the bese of conditions. [isOpen boolean attribute] -->   
+                <aura:if isTrue="{!v.showEdit}">
+                    
+                     
+                    <section role="dialog" tabindex="-1" aria-labelledby="modal-heading-01" aria-modal="true" aria-describedby="modal-content-id-1" class="slds-modal slds-fade-in-open">
+                        <div class="slds-modal__container">
+                            
+                            <header class="slds-modal__header">
+                                <lightning:buttonIcon iconName="utility:close"
+                                                      onclick="{! c.closeEditModal }"
+                                                      alternativeText="close"
+                                                      variant="bare-inverse"
+                                                      class="slds-modal__close"/>
+                                <h2 id="modal-heading-01" class="slds-text-heading_medium slds-hyphenate">Edit Account</h2>
+                                
+                            </header>
+                            
+                            <div class="slds-modal__content slds-p-around_medium" style="padding-top: 0px;" id="modal-content-id-1">
+                            
+                                <div class="slds-p-top_large" Style=""> 
+                                    
+                                    <lightning:layout multipleRows="true" >
+                                        <lightning:layoutitem padding="around-small" flexibility="auto" size="6">
+                                            <lightning:input  label="Name"  value="{!v.WrapperRec.name}"/>
+                                        </lightning:layoutitem>
+                                        <lightning:layoutitem padding="around-small" flexibility="auto" size="6">
+                                            <lightning:input  label="AccountNumber" value="{!v.WrapperRec.AccountNumber}" />
+                                        </lightning:layoutitem>
+                                        <lightning:layoutitem padding="around-small" flexibility="auto" size="6">
+                                            <lightning:input  label="AccountSource"   value="{!v.WrapperRec.AccountSource}"/>
+                                        </lightning:layoutitem>
+                                        <lightning:layoutitem padding="around-small" flexibility="auto" size="6">
+                                            <lightning:input  label="Type"   value="{!v.WrapperRec.Type}"/>
+                                        </lightning:layoutitem>
+                                        <!--lightning:layoutitem padding="around-small" flexibility="auto" size="6">
+                                            <lightning:input  label="Parent"   value="{!v.WrapperRec.Parent}"/>
+                                        </lightning:layoutitem-->
+                                        <lightning:layoutitem padding="around-small" flexibility="auto" size="6">
+                                            <lightning:input  label="AnnualRevenue"   value="{!v.WrapperRec.AnnualRevenue}"/>
+                                        </lightning:layoutitem>
+                                        <lightning:layoutitem padding="around-small" flexibility="auto" size="6">
+                                            <lightning:input  label="Industry"   value="{!v.WrapperRec.Industry}"/>
+                                        </lightning:layoutitem>
+                                        <lightning:layoutitem padding="around-small" flexibility="auto" size="6">
+                                            <lightning:input  label="Description"   value="{!v.WrapperRec.Description}"/>
+                                        </lightning:layoutitem>
+                                        <lightning:layoutitem padding="around-small" flexibility="auto" size="6">
+                                            <lightning:input  label="Phone"   value="{!v.WrapperRec.Phone}"/>
+                                        </lightning:layoutitem>
+                                        <lightning:layoutitem padding="around-small" flexibility="auto" size="6">
+                                            <lightning:input  label="Fax"   value="{!v.WrapperRec.Fax}"/>
+                                        </lightning:layoutitem>
+                                    </lightning:layout>
+                                    
+                                    <lightning:layout horizontalAlign="left">
+                                        <lightning:layoutitem padding="around-small">
+                                            <lightning:button  label="Save" variant="brand" onclick="{!c.updateAccount}"/>
+                                            <lightning:button  label="Cancel" variant="brand" onclick="{!c.closeEditModal}"/>
+                                        </lightning:layoutitem>
+                                    </lightning:layout>
+                                </div>
+                             </div>   
+                            
+                          
+                        </div>
+                    </section>
+                    <div class="slds-backdrop slds-backdrop_open"></div>
+                    
+                    
+                </aura:if>
+            </div>
+    <!-- Edit popup code ends -->
+            
+            <!-- Update Account Source popup code starts -->
+			<div class="slds-m-around_xx-large">
+        
+                <!--Use aura:if tag to display Model Box, on the bese of conditions. [isOpen boolean attribute] -->   
+                <aura:if isTrue="{!v.showUpdateSourceModal}">
+                    
+                     
+                    <section role="dialog" tabindex="-1" aria-labelledby="modal-heading-01" aria-modal="true" aria-describedby="modal-content-id-1" class="slds-modal slds-fade-in-open">
+                        <div class="slds-modal__container">
+                            
+                            <header class="slds-modal__header">
+                                <lightning:buttonIcon iconName="utility:close"
+                                                      onclick="{! c.closeUpdateSource }"
+                                                      alternativeText="close"
+                                                      variant="bare-inverse"
+                                                      class="slds-modal__close"/>
+                                <h2 id="modal-heading-01" class="slds-text-heading_medium slds-hyphenate">Update Account Source</h2>
+                                
+                            </header>
+                            
+                            <div class="slds-modal__content slds-p-around_medium" style="padding-top: 0px;" id="modal-content-id-1">
+                            
+                                <div class="slds-p-top_large" Style=""> 
+                                    <!--force:inputField value="{!v.dummyAccount.AccountSource}"/>
+                                    <lightning:layout multipleRows="true" >
+                                        <lightning:layoutitem padding="around-small" flexibility="auto" size="6">
+                                            <lightning:input  label="Account Source"  value="{!v.dummyAccount.AccountSource}"/>
+                                        </lightning:layoutitem>
+                                        
+                                    </lightning:layout-->
+<div class="slds-form-element">
+      <label class="slds-form-element__label" for="select-01">Select Label</label>
+      <div class="slds-select_container">
+         <ui:inputSelect  aura:id="accSource" class="slds-select"  change="{!c.onPicklistChange}"/>
+      </div>
+   </div>
+                                    <lightning:layout horizontalAlign="left">
+                                        <lightning:layoutitem padding="around-small">
+                                            <lightning:button  label="Update" variant="brand" onclick="{!c.updateAccountSource}"/>
+                                            <lightning:button  label="Cancel" variant="brand" onclick="{!c.closeUpdateSource}"/>
+                                        </lightning:layoutitem>
+                                    </lightning:layout>
+                                </div>
+                             </div>   
+                            
+                          
+                        </div>
+                    </section>
+                    <div class="slds-backdrop slds-backdrop_open"></div>
+                    
+                    
+                </aura:if>
+            </div>
+    <!-- Update Account Source popup code ends -->
+            
+            <!-- Delete Account popup code starts -->
+			<div class="slds-m-around_xx-large">
+        
+                <!--Use aura:if tag to display Model Box, on the bese of conditions. [isOpen boolean attribute] -->   
+                <aura:if isTrue="{!v.showDeleteModal}">
+                    
+                     
+                    <section role="dialog" tabindex="-1" aria-labelledby="modal-heading-01" aria-modal="true" aria-describedby="modal-content-id-1" class="slds-modal slds-fade-in-open">
+                        <div class="slds-modal__container">
+                            
+                            <header class="slds-modal__header">
+                                <lightning:buttonIcon iconName="utility:close"
+                                                      onclick="{! c.closeDeleteModal }"
+                                                      alternativeText="close"
+                                                      variant="bare-inverse"
+                                                      class="slds-modal__close"/>
+                                <h2 id="modal-heading-01" class="slds-text-heading_medium slds-hyphenate">Delete Accounts</h2>
+                                
+                            </header>
+                            
+                            <div class="slds-modal__content slds-p-around_medium" style="padding-top: 0px;" id="modal-content-id-1">
+								<span style="margin-left: 13px;">Do you really want to delete selected Accounts? </span>
+                                <div class="slds-p-top_large" Style=""> 
+                                   
+                                    <lightning:layout horizontalAlign="left">
+                                        <lightning:layoutitem padding="around-small">
+                                            <lightning:button  label="Delete" variant="brand" onclick="{!c.deleteAll}"/>
+                                            <lightning:button  label="Cancel" variant="brand" onclick="{!c.closeDeleteModal}"/>
+                                        </lightning:layoutitem>
+                                    </lightning:layout>
+                                </div>
+                             </div>   
+                            
+                          
+                        </div>
+                    </section>
+                    <div class="slds-backdrop slds-backdrop_open"></div>
+                    
+                    
+                </aura:if>
+            </div>
+    <!-- Delete Account popup code ends -->
+	</div>
+</aura:component>
